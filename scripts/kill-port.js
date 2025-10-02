@@ -80,7 +80,7 @@ async function main() {
   await killPort(PORT);
 
   console.log('Starting development server...');
-  const npm = spawn('npm', ['run', 'dev'], {
+  const npm = spawn('npm', ['run', 'dev:next'], {
     stdio: 'inherit',
     shell: true
   });

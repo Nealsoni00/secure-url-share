@@ -42,4 +42,4 @@ elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
 fi
 
 echo "Starting development server..."
-npm run dev
+npm run dev:next
