@@ -4,7 +4,7 @@ A secure URL sharing application with password protection and access tracking.
 
 ## Features
 
-- Google OAuth authentication (restricted to @prepard911.com and @axon.com domains)
+- Google OAuth authentication (restricted to @prepard911.com, @axon.com, and @nealsoni.com domains)
 - Create password-protected links for any URL
 - Track who accesses links with IP logging
 - Admin dashboard for viewing all access logs

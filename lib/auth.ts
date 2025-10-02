@@ -3,7 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 
-const ALLOWED_DOMAINS = ['prepard911.com', 'axon.com']
+const ALLOWED_DOMAINS = ['prepard911.com', 'axon.com', 'nealsoni.com']
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nealsoni00@gmail.com'
 
 export const authOptions: NextAuthOptions = {

@@ -15,7 +15,7 @@ export default function SignIn() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Only users with @prepard911.com, @axon.com emails, or pre-approved accounts can sign in
+            Only users with @prepard911.com, @axon.com, @nealsoni.com emails, or pre-approved accounts can sign in
           </p>
         </div>
         <div className="mt-8 space-y-6">

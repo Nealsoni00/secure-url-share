@@ -32,7 +32,7 @@ export default function Home() {
           <div className="space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800 text-center">
-                Access restricted to @prepard911.com and @axon.com email domains
+                Access restricted to @prepard911.com, @axon.com, and @nealsoni.com email domains
               </p>
             </div>
             <button
