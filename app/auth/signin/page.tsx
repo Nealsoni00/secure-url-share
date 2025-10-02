@@ -1,12 +1,22 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { useEffect } from 'react'
 
 export default function SignIn() {
+  const { data: session, status } = useSession()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const error = searchParams.get('error')
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push(callbackUrl)
+    }
+  }, [status, router, callbackUrl])
 
   const getErrorMessage = (error: string | null) => {
     switch(error) {
@@ -24,6 +34,26 @@ export default function SignIn() {
   }
 
   const errorMessage = getErrorMessage(error)
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'authenticated') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-500">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

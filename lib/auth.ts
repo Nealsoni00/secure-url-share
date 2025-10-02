@@ -30,22 +30,36 @@ export const authOptions: NextAuthOptions = {
 
       return isAllowed
     },
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id
-        session.user.isAdmin = (await prisma.user.findUnique({
-          where: { id: user.id },
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
           select: { isAdmin: true }
-        }))?.isAdmin || false
+        })
+        session.user.isAdmin = dbUser?.isAdmin || false
       }
       return session
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id
+      }
+      return token
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl + '/dashboard'
+    }
   },
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
   session: {
-    strategy: 'database',
+    strategy: 'jwt',
   },
 }
