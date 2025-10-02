@@ -6,6 +6,22 @@ import { useSearchParams } from 'next/navigation'
 export default function SignIn() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+  const error = searchParams.get('error')
+
+  const getErrorMessage = (error: string | null) => {
+    switch(error) {
+      case 'Callback':
+        return 'Authentication failed. Please make sure you are using an email from @prepard911.com, @axon.com, or @nealsoni.com'
+      case 'AccessDenied':
+        return 'Access denied. Your email domain is not authorized.'
+      case 'Configuration':
+        return 'There is a configuration issue. Please contact support.'
+      default:
+        return null
+    }
+  }
+
+  const errorMessage = getErrorMessage(error)
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -18,6 +34,15 @@ export default function SignIn() {
             Only users with @prepard911.com, @axon.com, @nealsoni.com emails, or pre-approved accounts can sign in
           </p>
         </div>
+
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-800 text-center">
+              {errorMessage}
+            </p>
+          </div>
+        )}
+
         <div className="mt-8 space-y-6">
           <button
             onClick={() => signIn('google', { callbackUrl })}
