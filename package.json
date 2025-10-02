@@ -4,6 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "node scripts/kill-port.js 3000",
+    "dev:force": "./scripts/dev.sh",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
