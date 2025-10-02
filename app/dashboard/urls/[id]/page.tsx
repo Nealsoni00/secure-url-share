@@ -116,7 +116,7 @@ export default function ManageUrl({ params }: { params: { id: string } }) {
                       type="text"
                       value={linkData.recipientName}
                       onChange={(e) => setLinkData({ ...linkData, recipientName: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                   </div>
                   <div>
@@ -125,7 +125,7 @@ export default function ManageUrl({ params }: { params: { id: string } }) {
                       type="email"
                       value={linkData.recipientEmail}
                       onChange={(e) => setLinkData({ ...linkData, recipientEmail: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -146,7 +146,7 @@ export default function ManageUrl({ params }: { params: { id: string } }) {
                       type="datetime-local"
                       value={linkData.expiresAt}
                       onChange={(e) => setLinkData({ ...linkData, expiresAt: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                   </div>
                   <div>
@@ -155,7 +155,7 @@ export default function ManageUrl({ params }: { params: { id: string } }) {
                       type="number"
                       value={linkData.maxAccesses}
                       onChange={(e) => setLinkData({ ...linkData, maxAccesses: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                   </div>
                 </div>

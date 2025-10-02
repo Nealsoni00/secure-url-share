@@ -131,7 +131,8 @@ export default function Dashboard() {
                     required
                     value={formData.originalUrl}
                     onChange={(e) => setFormData({ ...formData, originalUrl: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="https://example.com"
                   />
                 </div>
                 <div>
@@ -140,7 +141,8 @@ export default function Dashboard() {
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="My Protected Document"
                   />
                 </div>
                 <div>
@@ -148,7 +150,9 @@ export default function Dashboard() {
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    rows={3}
+                    placeholder="Brief description of the content"
                   />
                 </div>
                 <div>
@@ -157,8 +161,8 @@ export default function Dashboard() {
                     type="text"
                     value={formData.customSlug}
                     onChange={(e) => setFormData({ ...formData, customSlug: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="Leave empty for auto-generated"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="custom-url-slug (optional)"
                   />
                 </div>
                 <div className="flex space-x-3">
