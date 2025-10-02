@@ -12,12 +12,14 @@ export default function SignIn() {
     switch(error) {
       case 'Callback':
         return 'Authentication failed. Please make sure you are using an email from @prepard911.com, @axon.com, or @nealsoni.com'
+      case 'OAuthCreateAccount':
+        return 'Failed to create account. Please try again or contact support.'
       case 'AccessDenied':
         return 'Access denied. Your email domain is not authorized.'
       case 'Configuration':
         return 'There is a configuration issue. Please contact support.'
       default:
-        return null
+        return error ? 'An error occurred during sign in. Please try again.' : null
     }
   }
 
