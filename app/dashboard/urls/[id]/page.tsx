@@ -249,6 +249,8 @@ export default function ManageUrl({ params }: { params: Promise<{ id: string }> 
   }
 
   const toggleUrlActive = async () => {
+    if (!protectedUrl) return
+
     const loadingToast = toast.loading('Updating status...')
     try {
       const response = await fetch(`/api/protected/urls/${id}`, {
