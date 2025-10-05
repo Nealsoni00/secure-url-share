@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
+import { getBaseUrl } from '@/lib/url'
 
 export async function GET(
   request: NextRequest,
@@ -36,7 +37,7 @@ export async function GET(
       }
     })
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const baseUrl = getBaseUrl(request)
     const linksWithFullUrl = accessLinks.map(link => ({
       ...link,
       password: undefined,
@@ -105,7 +106,7 @@ export async function POST(
       }
     })
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const baseUrl = getBaseUrl(request)
     const fullUrl = `${baseUrl}/s/${accessLink.uniqueCode}`
 
     return NextResponse.json({
