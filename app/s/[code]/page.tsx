@@ -151,9 +151,28 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
 
   // Transform URLs to embeddable versions
   const getEmbedUrl = (url: string): string => {
-    // Loom: https://www.loom.com/share/VIDEO_ID -> https://www.loom.com/embed/VIDEO_ID
-    if (url.includes('loom.com/share/')) {
-      return url.replace('/share/', '/embed/')
+    // Loom: Multiple URL formats support
+    if (url.includes('loom.com')) {
+      // Handle both www.loom.com and loom.com
+      // Extract video ID from various formats
+      let videoId = null
+
+      // Format: https://www.loom.com/share/VIDEO_ID or https://loom.com/share/VIDEO_ID
+      const shareMatch = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)
+      if (shareMatch) {
+        videoId = shareMatch[1]
+      }
+
+      // Format: https://www.loom.com/embed/VIDEO_ID (already embedded)
+      const embedMatch = url.match(/loom\.com\/embed\/([a-zA-Z0-9]+)/)
+      if (embedMatch) {
+        return url // Already in embed format
+      }
+
+      if (videoId) {
+        // Return proper embed URL with hide_owner parameter to avoid some CSP issues
+        return `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`
+      }
     }
 
     // YouTube: various formats -> https://www.youtube.com/embed/VIDEO_ID
@@ -253,6 +272,7 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
               className="w-full h-full border-0"
               title={urlData.title || 'Protected Content'}
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           )}
