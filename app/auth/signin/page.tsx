@@ -3,9 +3,9 @@
 import { signIn } from 'next-auth/react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
-export default function SignIn() {
+function SignInContent() {
   const { data: session, status } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -85,5 +85,17 @@ export default function SignIn() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   )
 }
