@@ -223,21 +223,10 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
     // Iframe/Embed mode with user info overlay
     return (
       <div className="min-h-screen bg-gray-900">
-        {/* Configure Access Button - Fixed top right - Only show if logged in */}
-        {session?.user && urlData.protectedUrlId && (
-          <a
-            href={`/dashboard/urls/${urlData.protectedUrlId}`}
-            className="fixed top-4 right-4 z-50 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-1 shadow-lg transition-colors"
-          >
-            <Settings className="h-3 w-3" />
-            <span>Configure Access</span>
-          </a>
-        )}
-
         {/* User Info Overlay - Always visible for tracking deterrent */}
         {(urlData.showUserInfo !== false) && urlData.recipientName && (
           <div className="bg-gray-800 text-white px-4 py-3 shadow-lg">
-            <div className="max-w-7xl mx-auto flex items-center justify-between pr-24">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Shield className="h-5 w-5 text-indigo-400" />
                 <div>
@@ -249,10 +238,22 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2 text-xs text-gray-400">
-                <AlertCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">This access is being tracked and logged</span>
-                <span className="sm:hidden">Tracked</span>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 text-xs text-gray-400">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline">This access is being tracked and logged</span>
+                  <span className="sm:hidden">Tracked</span>
+                </div>
+                {/* Configure Access Button - Only show if logged in */}
+                {session?.user && urlData.protectedUrlId && (
+                  <a
+                    href={`/dashboard/urls/${urlData.protectedUrlId}`}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1 transition-colors"
+                  >
+                    <Settings className="h-3 w-3" />
+                    <span>Configure Access</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>
