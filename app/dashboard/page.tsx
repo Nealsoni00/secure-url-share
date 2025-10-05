@@ -168,10 +168,10 @@ export default function Dashboard() {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <Link href="/" className="flex items-center cursor-pointer hover:opacity-80 transition-opacity">
               <Shield className="h-8 w-8 text-indigo-600 mr-3" />
               <h1 className="text-xl font-bold text-gray-900">Secure URL Share</h1>
-            </div>
+            </Link>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">{session?.user?.email}</span>
               {session?.user?.isAdmin && (

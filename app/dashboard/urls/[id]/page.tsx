@@ -521,38 +521,145 @@ export default function ManageUrl({ params }: { params: Promise<{ id: string }> 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-              <input
-                type="text"
-                value={editData.title || ''}
-                onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                onBlur={handleSaveUrl}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="No title"
-              />
+              {editingField === 'title' ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={editData.title || ''}
+                    onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="No title"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleSaveField('title', editData.title)}
+                    className="text-green-600 hover:text-green-700 p-2"
+                    title="Save"
+                  >
+                    <Check className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingField(null)
+                      setEditData({ ...editData, title: protectedUrl.title })
+                    }}
+                    className="text-gray-500 hover:text-gray-700 p-2"
+                    title="Cancel"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="group relative flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-400 min-h-[42px]">
+                  <p className="flex-1 text-gray-900">{protectedUrl.title || 'No title'}</p>
+                  <button
+                    onClick={() => {
+                      setEditingField('title')
+                      setEditData({ ...editData, title: protectedUrl.title })
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-indigo-600 ml-2"
+                    title="Edit title"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Custom Slug</label>
-              <input
-                type="text"
-                value={editData.customSlug || ''}
-                onChange={(e) => setEditData({ ...editData, customSlug: e.target.value })}
-                onBlur={handleSaveUrl}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
-                placeholder="custom-slug"
-              />
+              {editingField === 'customSlug' ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={editData.customSlug || ''}
+                    onChange={(e) => setEditData({ ...editData, customSlug: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
+                    placeholder="custom-slug"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleSaveField('customSlug', editData.customSlug)}
+                    className="text-green-600 hover:text-green-700 p-2"
+                    title="Save"
+                  >
+                    <Check className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingField(null)
+                      setEditData({ ...editData, customSlug: protectedUrl.customSlug })
+                    }}
+                    className="text-gray-500 hover:text-gray-700 p-2"
+                    title="Cancel"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="group relative flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-400 min-h-[42px]">
+                  <p className="flex-1 text-gray-900 font-mono">{protectedUrl.customSlug}</p>
+                  <button
+                    onClick={() => {
+                      setEditingField('customSlug')
+                      setEditData({ ...editData, customSlug: protectedUrl.customSlug })
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-indigo-600 ml-2"
+                    title="Edit custom slug"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                value={editData.description || ''}
-                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                onBlur={handleSaveUrl}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                rows={3}
-                placeholder="No description"
-              />
+              {editingField === 'description' ? (
+                <div className="flex items-start space-x-2">
+                  <textarea
+                    value={editData.description || ''}
+                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="No description"
+                    autoFocus
+                  />
+                  <div className="flex flex-col space-y-2">
+                    <button
+                      onClick={() => handleSaveField('description', editData.description)}
+                      className="text-green-600 hover:text-green-700 p-2"
+                      title="Save"
+                    >
+                      <Check className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingField(null)
+                        setEditData({ ...editData, description: protectedUrl.description })
+                      }}
+                      className="text-gray-500 hover:text-gray-700 p-2"
+                      title="Cancel"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="group relative flex items-start px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-400 min-h-[78px]">
+                  <p className="flex-1 text-gray-900 whitespace-pre-wrap">{protectedUrl.description || 'No description'}</p>
+                  <button
+                    onClick={() => {
+                      setEditingField('description')
+                      setEditData({ ...editData, description: protectedUrl.description })
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-indigo-600 ml-2"
+                    title="Edit description"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
@@ -575,8 +682,9 @@ export default function ManageUrl({ params }: { params: Promise<{ id: string }> 
               <select
                 value={editData.displayMode || 'iframe'}
                 onChange={(e) => {
-                  setEditData({ ...editData, displayMode: e.target.value })
-                  setTimeout(handleSaveUrl, 100)
+                  const newValue = e.target.value
+                  setEditData({ ...editData, displayMode: newValue })
+                  handleSaveField('displayMode', newValue)
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
@@ -592,8 +700,9 @@ export default function ManageUrl({ params }: { params: Promise<{ id: string }> 
                   id="showUserInfo"
                   checked={editData.showUserInfo !== undefined ? editData.showUserInfo : true}
                   onChange={(e) => {
-                    setEditData({ ...editData, showUserInfo: e.target.checked })
-                    setTimeout(handleSaveUrl, 100)
+                    const newValue = e.target.checked
+                    setEditData({ ...editData, showUserInfo: newValue })
+                    handleSaveField('showUserInfo', newValue)
                   }}
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
                 />
