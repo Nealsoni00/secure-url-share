@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("URL_SHARING_PRISMA_DATABASE_URL")
+  url      = env("POSTGRES_URL")
 }
 
 model User {
@@ -56,6 +56,8 @@ model ProtectedUrl {
   customSlug    String    @unique
   title         String?
   description   String?
+  displayMode   String    @default("iframe") // "iframe" or "redirect"
+  showUserInfo  Boolean   @default(true)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -71,7 +73,10 @@ model AccessLink {
   uniqueCode    String    @unique
   recipientName String?
   recipientEmail String?
-  password      String
+  recipientPhone String?
+  authMethod    String    @default("password") // password, name, email, phone, verified_email, verified_phone
+  password      String?   // Made optional
+  requireVerification Boolean @default(false)
   expiresAt     DateTime?
   maxAccesses   Int?
   accessCount   Int       @default(0)
@@ -92,6 +97,9 @@ model AccessLog {
   referrer      String?
   country       String?
   city          String?
+  providedName  String?   // Track what name was provided
+  providedEmail String?   // Track what email was provided
+  providedPhone String?   // Track what phone was provided
   createdAt     DateTime  @default(now())
 
   protectedUrl  ProtectedUrl @relation(fields: [protectedUrlId], references: [id], onDelete: Cascade)

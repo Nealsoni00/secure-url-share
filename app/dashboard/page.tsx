@@ -18,7 +18,9 @@ import {
   Link2,
   Eye,
   EyeOff,
-  Check
+  Check,
+  Monitor,
+  ArrowRight
 } from 'lucide-react'
 
 interface ProtectedUrl {
@@ -52,7 +54,9 @@ export default function Dashboard() {
     originalUrl: '',
     title: '',
     description: '',
-    customSlug: ''
+    customSlug: '',
+    displayMode: 'auto',
+    showUserInfo: true
   })
 
   useEffect(() => {
@@ -94,23 +98,51 @@ export default function Dashboard() {
 
     const loadingToast = toast.loading('Creating protected URL...')
 
+    // Auto-detect display mode if set to auto
+    let displayMode = formData.displayMode
+    if (displayMode === 'auto') {
+      const url = formData.originalUrl.toLowerCase()
+      const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) ||
+                     url.includes('loom.com') ||
+                     url.includes('youtube.com') ||
+                     url.includes('vimeo.com')
+      const isPDF = url.match(/\.pdf$/i)
+      displayMode = (isVideo || isPDF) ? 'iframe' : 'redirect'
+    }
+
     try {
       const response = await fetch('/api/protected/urls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          displayMode,
+          showUserInfo: formData.showUserInfo
+        })
       })
 
       if (response.ok) {
         const newUrl = await response.json()
-        const protectedUrl = `${window.location.origin}/s/${newUrl.customSlug}`
+        const accessUrl = `${window.location.origin}/s/${newUrl.defaultAccessLink.uniqueCode}`
 
-        await navigator.clipboard.writeText(protectedUrl)
-        toast.success('Protected URL created and copied to clipboard!', { id: loadingToast })
+        // Copy the access URL (not the slug) to clipboard
+        await navigator.clipboard.writeText(accessUrl)
+
+        // Show success message with password
+        toast.success(
+          `Protected URL created!\n\nURL copied to clipboard\nPassword: ${newUrl.defaultAccessLink.password}`,
+          {
+            id: loadingToast,
+            duration: 10000,
+            style: {
+              whiteSpace: 'pre-line'
+            }
+          }
+        )
 
         await fetchUrls()
         setShowCreateForm(false)
-        setFormData({ originalUrl: '', title: '', description: '', customSlug: '' })
+        setFormData({ originalUrl: '', title: '', description: '', customSlug: '', displayMode: 'auto', showUserInfo: true })
       } else {
         toast.error('Failed to create URL', { id: loadingToast })
       }
@@ -245,6 +277,70 @@ export default function Dashboard() {
                 />
               </div>
 
+              {/* Display Mode Configuration */}
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Monitor className="inline h-4 w-4 mr-1" />
+                    Display Mode
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, displayMode: 'auto' })}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.displayMode === 'auto'
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-sm font-medium">Auto</div>
+                      <div className="text-xs text-gray-500 mt-1">Smart detect</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, displayMode: 'iframe' })}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.displayMode === 'iframe'
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-sm font-medium">Embed</div>
+                      <div className="text-xs text-gray-500 mt-1">Show in frame</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, displayMode: 'redirect' })}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.displayMode === 'redirect'
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-sm font-medium">Redirect</div>
+                      <div className="text-xs text-gray-500 mt-1">Direct access</div>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Auto mode embeds videos and PDFs, redirects for other content
+                  </p>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="showUserInfo"
+                    checked={formData.showUserInfo}
+                    onChange={(e) => setFormData({ ...formData, showUserInfo: e.target.checked })}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="showUserInfo" className="ml-2 block text-sm text-gray-900">
+                    Show recipient info overlay (deters sharing)
+                  </label>
+                </div>
+              </div>
+
               <div className="flex space-x-3 pt-2">
                 <button
                   type="submit"
@@ -256,7 +352,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => {
                     setShowCreateForm(false)
-                    setFormData({ originalUrl: '', title: '', description: '', customSlug: '' })
+                    setFormData({ originalUrl: '', title: '', description: '', customSlug: '', displayMode: 'auto', showUserInfo: true })
                   }}
                   className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >
@@ -283,7 +379,12 @@ export default function Dashboard() {
         ) : (
           <div className="grid gap-4">
             {urls.map((url) => {
-              const protectedUrl = `${window.location.origin}/s/${url.customSlug}`
+              // Use the first access link's code if available
+              const firstLink = url.accessLinks[0]
+              const accessUrl = firstLink
+                ? `${window.location.origin}/s/${firstLink.uniqueCode}`
+                : null
+
               return (
                 <div
                   key={url.id}
@@ -303,25 +404,31 @@ export default function Dashboard() {
                           <div className="mt-3 flex items-center space-x-4">
                             <div className="flex items-center text-sm text-gray-500">
                               <Link2 className="h-4 w-4 mr-1" />
-                              <span className="font-mono text-xs">/s/{url.customSlug}</span>
+                              {firstLink ? (
+                                <span className="font-mono text-xs">/s/{firstLink.uniqueCode}</span>
+                              ) : (
+                                <span className="font-mono text-xs text-amber-600">No access links</span>
+                              )}
                             </div>
 
-                            <button
-                              onClick={() => copyToClipboard(protectedUrl, url.id, 'Protected URL')}
-                              className="flex items-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                            >
-                              {copiedId === url.id ? (
-                                <>
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Copied!
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="h-4 w-4 mr-1" />
-                                  Copy URL
-                                </>
-                              )}
-                            </button>
+                            {accessUrl && (
+                              <button
+                                onClick={() => copyToClipboard(accessUrl, url.id, 'Access URL')}
+                                className="flex items-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                              >
+                                {copiedId === url.id ? (
+                                  <>
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Copied!
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="h-4 w-4 mr-1" />
+                                    Copy Link
+                                  </>
+                                )}
+                              </button>
+                            )}
 
                             <a
                               href={url.originalUrl}
