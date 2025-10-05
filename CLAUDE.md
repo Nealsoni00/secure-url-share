@@ -92,7 +92,8 @@ When `showUserInfo: true`, displays recipient name overlay and watermark to dete
 Required `.env.local` variables (see `.env.local.example`):
 
 ```bash
-URL_SHARING_POSTGRES_URL         # PostgreSQL connection string
+POSTGRES_URL                     # PostgreSQL connection string (Vercel Postgres auto-sets this)
+POSTGRES_PRISMA_URL             # Prisma-optimized connection string (Vercel Postgres auto-sets this)
 NEXTAUTH_URL                     # App URL (http://localhost:3000 for dev)
 NEXTAUTH_SECRET                  # JWT encryption secret
 GOOGLE_CLIENT_ID                 # Google OAuth credentials
