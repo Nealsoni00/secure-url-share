@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Key, User, Mail, Phone, ShieldOff, AlertCircle, Shield, Settings } from 'lucide-react'
+import { Key, User, Mail, Phone, ShieldOff, AlertCircle, Shield, Settings, ExternalLink } from 'lucide-react'
 
 interface LinkInfo {
   authMethod: string
@@ -51,6 +51,7 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
     showUserInfo?: boolean
     protectedUrlId?: string
   } | null>(null)
+  const [embedError, setEmbedError] = useState(false)
 
   useEffect(() => {
     fetchLinkInfo()
@@ -170,8 +171,8 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
       }
 
       if (videoId) {
-        // Return proper embed URL with hide_owner parameter to avoid some CSP issues
-        return `https://www.loom.com/embed/${videoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`
+        // Return proper embed URL - simpler is better
+        return `https://www.loom.com/embed/${videoId}`
       }
     }
 
@@ -258,8 +259,27 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
         )}
 
         {/* Content Area */}
-        <div className="h-[calc(100vh-64px)]">
-          {isPDF ? (
+        <div className="h-[calc(100vh-64px)] relative">
+          {embedError ? (
+            <div className="flex items-center justify-center h-full bg-gray-100">
+              <div className="text-center max-w-md mx-auto p-8">
+                <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Embedding Not Available</h3>
+                <p className="text-gray-600 mb-6">
+                  This content cannot be embedded. This may be due to privacy settings on the source platform.
+                </p>
+                <a
+                  href={urlData.originalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                >
+                  <ExternalLink className="h-5 w-5 mr-2" />
+                  Open in New Tab
+                </a>
+              </div>
+            </div>
+          ) : isPDF ? (
             <embed
               src={embedUrl}
               type="application/pdf"
@@ -274,7 +294,21 @@ export default function AccessPage({ params }: { params: Promise<{ code: string 
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              onError={() => setEmbedError(true)}
             />
+          )}
+
+          {/* Fallback button for manual access */}
+          {!embedError && !isPDF && (
+            <a
+              href={urlData.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute bottom-6 left-6 z-50 bg-white hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 shadow-lg transition-colors border border-gray-200"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>Open Original</span>
+            </a>
           )}
         </div>
 
