@@ -1,3 +1,8 @@
 {
-  "buildCommand": "prisma generate && next build"
+  "buildCommand": "prisma generate && next build",
+  "env": {
+    "URL_SHARING_POSTGRES_URL": "@url_sharing_postgres_url",
+    "URL_SHARING_PRISMA_DATABASE_URL": "@url_sharing_prisma_database_url",
+    "URL_SHARING_DATABASE_URL": "@url_sharing_database_url"
+  }
 }

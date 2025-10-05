@@ -92,8 +92,9 @@ When `showUserInfo: true`, displays recipient name overlay and watermark to dete
 Required `.env.local` variables (see `.env.local.example`):
 
 ```bash
-POSTGRES_URL                     # PostgreSQL connection string (Vercel Postgres auto-sets this)
-POSTGRES_PRISMA_URL             # Prisma-optimized connection string (Vercel Postgres auto-sets this)
+URL_SHARING_POSTGRES_URL         # PostgreSQL connection string
+URL_SHARING_PRISMA_DATABASE_URL  # Prisma-optimized connection string
+URL_SHARING_DATABASE_URL         # Alternative database URL
 NEXTAUTH_URL                     # App URL (http://localhost:3000 for dev) - DO NOT set on Vercel
 NEXTAUTH_SECRET                  # JWT encryption secret (generate with: openssl rand -base64 32)
 GOOGLE_CLIENT_ID                 # Google OAuth credentials
@@ -121,7 +122,7 @@ The app automatically works on any domain without configuration changes. NextAut
 **Vercel Environment Variables**:
 - Do NOT set `NEXTAUTH_URL` on Vercel - it will auto-detect
 - Set `NEXTAUTH_SECRET` to the same value across all environments
-- Vercel Postgres automatically provides `POSTGRES_URL` and `POSTGRES_PRISMA_URL`
+- Set `URL_SHARING_POSTGRES_URL`, `URL_SHARING_PRISMA_DATABASE_URL`, and `URL_SHARING_DATABASE_URL` with your database connection strings
 
 ## Path Aliases
 
