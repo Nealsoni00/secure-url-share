@@ -94,12 +94,34 @@ Required `.env.local` variables (see `.env.local.example`):
 ```bash
 POSTGRES_URL                     # PostgreSQL connection string (Vercel Postgres auto-sets this)
 POSTGRES_PRISMA_URL             # Prisma-optimized connection string (Vercel Postgres auto-sets this)
-NEXTAUTH_URL                     # App URL (http://localhost:3000 for dev)
-NEXTAUTH_SECRET                  # JWT encryption secret
+NEXTAUTH_URL                     # App URL (http://localhost:3000 for dev) - DO NOT set on Vercel
+NEXTAUTH_SECRET                  # JWT encryption secret (generate with: openssl rand -base64 32)
 GOOGLE_CLIENT_ID                 # Google OAuth credentials
 GOOGLE_CLIENT_SECRET
 ADMIN_EMAIL                      # Email for admin access (default: nealsoni00@gmail.com)
 ```
+
+### Multi-Domain Setup
+
+The app automatically works on any domain without configuration changes. NextAuth detects the URL from the request headers.
+
+**IMPORTANT**: For Google OAuth to work across multiple domains, you must add ALL redirect URIs to Google Cloud Console:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Select your OAuth 2.0 Client ID
+3. Add these Authorized Redirect URIs:
+   ```
+   http://localhost:3000/api/auth/callback/google
+   https://url.nealsoni.com/api/auth/callback/google
+   https://secure-url-share.vercel.app/api/auth/callback/google
+   https://*.vercel.app/api/auth/callback/google
+   ```
+   (Add any additional custom domains or Vercel preview URLs as needed)
+
+**Vercel Environment Variables**:
+- Do NOT set `NEXTAUTH_URL` on Vercel - it will auto-detect
+- Set `NEXTAUTH_SECRET` to the same value across all environments
+- Vercel Postgres automatically provides `POSTGRES_URL` and `POSTGRES_PRISMA_URL`
 
 ## Path Aliases
 
