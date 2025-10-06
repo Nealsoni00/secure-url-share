@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("URL_SHARING_POSTGRES_URL")
+}
+
+enum UserRole {
+  USER          // Can view organization members
+  ADMINISTRATOR // Can manage users in organization
+  SUPERADMIN    // Can manage all organizations
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  domain      String?  @unique // Email domain (e.g., "axon.com", "prepared911.com")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  createdBy   String?  // User ID of the first admin
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  image           String?
+  emailVerified   DateTime?
+  role            UserRole  @default(USER)
+  organizationId  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Kept for backward compatibility during migration
+  isAdmin         Boolean   @default(false)
+  isSuperAdmin    Boolean   @default(false)
+
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  protectedUrls   ProtectedUrl[]
+  accounts        Account[]
+  sessions        Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProtectedUrl {
+  id            String    @id @default(cuid())
+  userId        String
+  originalUrl   String    @db.Text
+  customSlug    String    @unique
+  title         String?
+  description   String?
+  displayMode   String    @default("iframe") // "iframe" or "redirect"
+  showUserInfo  Boolean   @default(true)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessLinks   AccessLink[]
+  accessLogs    AccessLog[]
+}
+
+model AccessLink {
+  id            String    @id @default(cuid())
+  protectedUrlId String
+  uniqueCode    String    @unique
+  recipientName String?
+  recipientEmail String?
+  recipientPhone String?
+  authMethod    String    @default("password") // password, name, email, phone, verified_email, verified_phone
+  password      String?   // Made optional
+  requireVerification Boolean @default(false)
+  expiresAt     DateTime?
+  maxAccesses   Int?
+  accessCount   Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  protectedUrl  ProtectedUrl @relation(fields: [protectedUrlId], references: [id], onDelete: Cascade)
+  accessLogs    AccessLog[]
+}
+
+model AccessLog {
+  id            String    @id @default(cuid())
+  protectedUrlId String
+  accessLinkId  String?
+  ipAddress     String
+  userAgent     String?
+  referrer      String?
+  country       String?
+  city          String?
+  providedName  String?   // Track what name was provided
+  providedEmail String?   // Track what email was provided
+  providedPhone String?   // Track what phone was provided
+  createdAt     DateTime  @default(now())
+
+  protectedUrl  ProtectedUrl @relation(fields: [protectedUrlId], references: [id], onDelete: Cascade)
+  accessLink    AccessLink?  @relation(fields: [accessLinkId], references: [id], onDelete: SetNull)
+}

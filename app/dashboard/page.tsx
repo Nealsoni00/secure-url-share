@@ -20,7 +20,10 @@ import {
   EyeOff,
   Check,
   Monitor,
-  ArrowRight
+  ArrowRight,
+  Building2,
+  Crown,
+  Menu
 } from 'lucide-react'
 
 interface ProtectedUrl {
@@ -50,6 +53,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [showMenu, setShowMenu] = useState(false)
   const [formData, setFormData] = useState({
     originalUrl: '',
     title: '',
@@ -128,12 +132,12 @@ export default function Dashboard() {
         // Copy the access URL (not the slug) to clipboard
         await navigator.clipboard.writeText(accessUrl)
 
-        // Show success message with password
+        // Show success message
         toast.success(
-          `Protected URL created!\n\nURL copied to clipboard\nPassword: ${newUrl.defaultAccessLink.password}`,
+          `Protected URL created and copied to clipboard!\n\nAuthentication: Name-based (passwordless)\nAnyone with the link can access by entering their full name.`,
           {
             id: loadingToast,
-            duration: 10000,
+            duration: 8000,
             style: {
               whiteSpace: 'pre-line'
             }
@@ -144,7 +148,8 @@ export default function Dashboard() {
         setShowCreateForm(false)
         setFormData({ originalUrl: '', title: '', description: '', customSlug: '', displayMode: 'auto', showUserInfo: true })
       } else {
-        toast.error('Failed to create URL', { id: loadingToast })
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to create URL', { id: loadingToast })
       }
     } catch (error) {
       console.error('Failed to create URL:', error)
@@ -173,23 +178,152 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold text-gray-900">Secure URL Share</h1>
             </Link>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">{session?.user?.email}</span>
-              {session?.user?.isAdmin && (
-                <Link
-                  href="/admin"
-                  className="text-sm text-indigo-600 hover:text-indigo-500 font-medium flex items-center"
+              <span className="text-sm text-gray-700 hidden sm:block">{session?.user?.email}</span>
+
+              {/* User Menu Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <Settings className="h-4 w-4 mr-1" />
-                  Admin
-                </Link>
-              )}
-              <button
-                onClick={() => signOut()}
-                className="text-sm text-gray-500 hover:text-gray-700 flex items-center"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Sign out
-              </button>
+                  {session?.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name || 'User'}
+                      className="h-8 w-8 rounded-full border-2 border-indigo-200"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                      <Users className="h-4 w-4 text-indigo-600" />
+                    </div>
+                  )}
+                  <Menu className="h-4 w-4 text-gray-600 hidden sm:block" />
+                </button>
+
+                {showMenu && (
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowMenu(false)}
+                    />
+
+                    {/* Dropdown Menu */}
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <div className="flex items-center space-x-3">
+                          {session?.user?.image ? (
+                            <img
+                              src={session.user.image}
+                              alt={session.user.name || 'User'}
+                              className="h-12 w-12 rounded-full border-2 border-indigo-200"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                              <Users className="h-6 w-6 text-indigo-600" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {session?.user?.name || 'User'}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
+                            {session?.user?.role && (
+                              <div className="mt-1">
+                                {session.user.role === 'SUPERADMIN' ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-800 rounded">
+                                    <Crown className="h-3 w-3 mr-1" />
+                                    Superadmin
+                                  </span>
+                                ) : session.user.role === 'ADMINISTRATOR' ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
+                                    <Shield className="h-3 w-3 mr-1" />
+                                    Administrator
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-800 rounded">
+                                    User
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {session?.user?.organization && (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <p className="text-xs text-gray-500">Organization</p>
+                            <p className="text-sm font-medium text-indigo-600 flex items-center mt-1">
+                              <Building2 className="h-3 w-3 mr-1" />
+                              {session.user.organization.name}
+                            </p>
+                            {session.user.organization.domain && (
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {session.user.organization.domain}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Profile Link */}
+                      <Link
+                        href="/profile"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setShowMenu(false)}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        View Profile
+                      </Link>
+
+                      {/* Superadmin Access */}
+                      {session?.user?.isSuperAdmin && (
+                        <Link
+                          href="/superadmin"
+                          className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors"
+                          onClick={() => setShowMenu(false)}
+                        >
+                          <Crown className="h-4 w-4 mr-2" />
+                          Superadmin Panel
+                        </Link>
+                      )}
+
+                      {/* Organization Settings */}
+                      {session?.user?.organizationId && (
+                        <Link
+                          href="/organization"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          onClick={() => setShowMenu(false)}
+                        >
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Organization
+                        </Link>
+                      )}
+
+                      {/* User Management - All org members can view */}
+                      {(session?.user?.organizationId || session?.user?.isSuperAdmin) && (
+                        <Link
+                          href="/users"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          onClick={() => setShowMenu(false)}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          {session?.user?.role === 'USER' ? 'Organization Members' : 'User Management'}
+                        </Link>
+                      )}
+
+                      <div className="border-t border-gray-200 mt-2 pt-2">
+                        <button
+                          onClick={() => signOut()}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

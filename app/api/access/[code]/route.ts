@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { validateRealName } from '@/lib/validation'
 
 export async function GET(
   request: NextRequest,
@@ -90,21 +91,33 @@ export async function POST(
         if (!body.name) {
           return NextResponse.json({ error: 'Name required' }, { status: 401 })
         }
+
+        // Validate that the name is legitimate (not fake)
+        const nameValidation = validateRealName(body.name)
+        if (!nameValidation.valid) {
+          return NextResponse.json({ error: nameValidation.error }, { status: 400 })
+        }
+
         // Case-insensitive comparison, trimmed
         providedName = body.name.trim()
         const expectedName = accessLink.recipientName?.trim().toLowerCase()
         const providedNameLower = providedName.toLowerCase()
 
-        if (accessLink.requireVerification) {
-          // Strict matching for verification
+        if (accessLink.requireVerification && expectedName) {
+          // Strict matching for verification when recipient name is set
           isValid = providedNameLower === expectedName
-        } else {
+          if (!isValid) {
+            return NextResponse.json({ error: 'Name does not match expected recipient' }, { status: 401 })
+          }
+        } else if (expectedName) {
           // Fuzzy matching - allow partial match for flexibility
-          isValid = expectedName ? providedNameLower.includes(expectedName) || expectedName.includes(providedNameLower) : true
-        }
-
-        if (!isValid) {
-          return NextResponse.json({ error: 'Name does not match' }, { status: 401 })
+          isValid = providedNameLower.includes(expectedName) || expectedName.includes(providedNameLower)
+          if (!isValid) {
+            return NextResponse.json({ error: 'Name does not match expected recipient' }, { status: 401 })
+          }
+        } else {
+          // No expected name - just accept any valid real name
+          isValid = true
         }
         break
 

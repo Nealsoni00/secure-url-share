@@ -82,6 +82,29 @@ function SignInContent() {
           >
             Sign in with Google
           </button>
+
+          <div className="text-center text-xs text-gray-500 space-y-2">
+            <p>
+              By signing in, you agree to our{' '}
+              <a
+                href="https://www.nealsoni.com/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:text-indigo-500 underline"
+              >
+                Terms of Service
+              </a>
+              {' '}and{' '}
+              <a
+                href="https://www.nealsoni.com/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:text-indigo-500 underline"
+              >
+                Privacy Policy
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

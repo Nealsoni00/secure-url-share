@@ -6,7 +6,7 @@
     "dev": "node scripts/kill-port.js 3000",
     "dev:next": "next dev",
     "dev:force": "./scripts/dev.sh",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"

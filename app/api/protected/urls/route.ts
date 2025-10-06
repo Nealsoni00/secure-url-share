@@ -47,13 +47,18 @@ export async function POST(request: NextRequest) {
   try {
     const { originalUrl, title, description, customSlug, displayMode, showUserInfo } = await request.json()
 
+    // Validate the original URL
+    try {
+      new URL(originalUrl)
+    } catch {
+      return NextResponse.json({
+        error: 'Invalid URL format. Please provide a valid URL starting with http:// or https://'
+      }, { status: 400 })
+    }
+
     const slug = customSlug || nanoid(10)
 
-    // Generate a random password for the default access link
-    const defaultPassword = nanoid(12)
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10)
-
-    // Create ProtectedUrl with a default AccessLink in a transaction
+    // Create ProtectedUrl with a default passwordless name-based AccessLink
     const result = await prisma.$transaction(async (tx) => {
       const protectedUrl = await tx.protectedUrl.create({
         data: {
@@ -67,29 +72,39 @@ export async function POST(request: NextRequest) {
         } as any
       })
 
-      // Create a default password-protected access link
+      // Create a default name-based access link (passwordless, least intrusive)
       const accessLink = await tx.accessLink.create({
         data: {
           protectedUrlId: protectedUrl.id,
-          uniqueCode: nanoid(),
-          authMethod: 'password',
-          password: hashedPassword,
+          uniqueCode: nanoid(12),
+          authMethod: 'name',
+          password: null,
           requireVerification: false,
         }
       })
 
-      return { protectedUrl, accessLink, defaultPassword }
+      return { protectedUrl, accessLink }
     })
 
     return NextResponse.json({
       ...result.protectedUrl,
       defaultAccessLink: {
-        uniqueCode: result.accessLink.uniqueCode,
-        password: result.defaultPassword
+        uniqueCode: result.accessLink.uniqueCode
       }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating protected URL:', error)
+
+    // Handle Prisma unique constraint violations
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0]
+      if (field === 'customSlug') {
+        return NextResponse.json({
+          error: `The custom slug "${customSlug}" is already in use. Please choose a different one.`
+        }, { status: 409 })
+      }
+    }
+
     return NextResponse.json({ error: 'Failed to create protected URL' }, { status: 500 })
   }
 }
