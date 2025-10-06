@@ -15,6 +15,7 @@ import {
   LogOut,
   Settings,
   ChevronRight,
+  ChevronDown,
   Link2,
   Eye,
   EyeOff,
@@ -23,8 +24,10 @@ import {
   ArrowRight,
   Building2,
   Crown,
-  Menu
+  Menu,
+  Edit
 } from 'lucide-react'
+import { detectUrlType } from '@/lib/url-type'
 
 interface ProtectedUrl {
   id: string
@@ -54,6 +57,7 @@ export default function Dashboard() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [showMenu, setShowMenu] = useState(false)
+  const [expandedUrls, setExpandedUrls] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState({
     originalUrl: '',
     title: '',
@@ -95,6 +99,18 @@ export default function Dashboard() {
     } catch (err) {
       toast.error('Failed to copy to clipboard')
     }
+  }
+
+  const toggleExpanded = (urlId: string) => {
+    setExpandedUrls(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(urlId)) {
+        newSet.delete(urlId)
+      } else {
+        newSet.add(urlId)
+      }
+      return newSet
+    })
   }
 
   const handleCreateUrl = async (e: React.FormEvent) => {
@@ -518,89 +534,126 @@ export default function Dashboard() {
               const accessUrl = firstLink
                 ? `${window.location.origin}/s/${firstLink.uniqueCode}`
                 : null
+              const isExpanded = expandedUrls.has(url.id)
+              const urlTypeInfo = detectUrlType(url.originalUrl)
 
               return (
                 <div
                   key={url.id}
-                  className="bg-white shadow-sm rounded-xl p-6 hover:shadow-md transition-shadow border border-gray-100"
+                  className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {url.title || 'Untitled'}
-                          </h3>
-                          {url.description && (
-                            <p className="mt-1 text-sm text-gray-600">{url.description}</p>
-                          )}
-
-                          <div className="mt-3 flex items-center space-x-4">
-                            <div className="flex items-center text-sm text-gray-500">
-                              <Link2 className="h-4 w-4 mr-1" />
-                              {firstLink ? (
-                                <span className="font-mono text-xs">/s/{firstLink.uniqueCode}</span>
-                              ) : (
-                                <span className="font-mono text-xs text-amber-600">No access links</span>
-                              )}
+                  {/* Main Card - Clickable to expand */}
+                  <div
+                    onClick={() => toggleExpanded(url.id)}
+                    className="p-6 cursor-pointer"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {url.title || 'Untitled'}
+                              </h3>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${urlTypeInfo.color}`}>
+                                <span className="mr-1">{urlTypeInfo.icon}</span>
+                                {urlTypeInfo.type}
+                              </span>
                             </div>
-
-                            {accessUrl && (
-                              <button
-                                onClick={() => copyToClipboard(accessUrl, url.id, 'Access URL')}
-                                className="flex items-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                              >
-                                {copiedId === url.id ? (
-                                  <>
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Copied!
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="h-4 w-4 mr-1" />
-                                    Copy Link
-                                  </>
-                                )}
-                              </button>
+                            {url.description && (
+                              <p className="mt-1 text-sm text-gray-600">{url.description}</p>
                             )}
 
-                            <a
-                              href={url.originalUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center text-sm text-gray-500 hover:text-gray-700"
-                            >
-                              <ExternalLink className="h-4 w-4 mr-1" />
-                              Original
-                            </a>
+                            <div className="mt-3 flex items-center space-x-6 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <Users className="h-4 w-4 mr-1" />
+                                {url.accessLinks.length} access {url.accessLinks.length === 1 ? 'link' : 'links'}
+                              </div>
+                              <div className="flex items-center">
+                                <Eye className="h-4 w-4 mr-1" />
+                                {url._count.accessLogs} total views
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="h-4 w-4 mr-1" />
+                                {new Date(url.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="mt-3 flex items-center space-x-6 text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4 mr-1" />
-                              {url.accessLinks.length} access links
-                            </div>
-                            <div className="flex items-center">
-                              <Eye className="h-4 w-4 mr-1" />
-                              {url._count.accessLogs} total views
-                            </div>
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1" />
-                              {new Date(url.createdAt).toLocaleDateString()}
-                            </div>
+                          <div className="ml-4 flex items-center gap-2">
+                            <Link
+                              href={`/dashboard/urls/${url.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center"
+                            >
+                              Manage
+                              <ChevronRight className="h-4 w-4 ml-1" />
+                            </Link>
+                            <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                           </div>
                         </div>
-
-                        <Link
-                          href={`/dashboard/urls/${url.id}`}
-                          className="ml-4 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center"
-                        >
-                          Manage
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Link>
                       </div>
                     </div>
                   </div>
+
+                  {/* Expanded Section - Access Links */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-100 bg-gray-50 px-6 py-4">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Access Links</h4>
+                      <div className="space-y-3">
+                        {url.accessLinks.map((link) => {
+                          const linkUrl = `${window.location.origin}/s/${link.uniqueCode}`
+                          return (
+                            <div
+                              key={link.id}
+                              className="bg-white rounded-lg p-3 border border-gray-200 flex items-center justify-between"
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-sm text-gray-900">/s/{link.uniqueCode}</span>
+                                  {link.recipientName && (
+                                    <span className="text-xs text-gray-500">
+                                      → {link.recipientName}
+                                    </span>
+                                  )}
+                                  {!link.isActive && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+                                      Inactive
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {link.accessCount} views
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    copyToClipboard(linkUrl, link.id, 'Link')
+                                  }}
+                                  className="text-indigo-600 hover:text-indigo-700 p-2 rounded-lg hover:bg-indigo-50 transition-colors"
+                                >
+                                  {copiedId === link.id ? (
+                                    <Check className="h-4 w-4" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </button>
+                                <Link
+                                  href={`/dashboard/urls/${url.id}#link-${link.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-gray-600 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Link>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
