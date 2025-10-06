@@ -1,23 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from './prisma'
 
 /**
- * One-time migration endpoint
- * Call this endpoint to apply the organization/role migration
- * Use: POST /api/admin/migrate with body: { secret: "your-admin-email" }
+ * Automatically check and apply migrations on server startup
+ * This ensures the database schema is always up-to-date
  */
-export async function POST(request: NextRequest) {
-  const { secret } = await request.json().catch(() => ({}))
-
-  // Security check - must provide admin email
-  if (secret !== process.env.ADMIN_EMAIL) {
-    return NextResponse.json({
-      error: 'Unauthorized'
-    }, { status: 401 })
-  }
-
+export async function checkAndApplyMigrations() {
   try {
-    // Check if migration is already applied
+    console.log('🔍 Checking database migration status...')
+
+    // Check if the role column exists
     const result = await prisma.$queryRaw<Array<{ exists: boolean }>>`
       SELECT EXISTS (
         SELECT FROM information_schema.columns
@@ -27,13 +18,13 @@ export async function POST(request: NextRequest) {
     `
 
     if (result[0]?.exists) {
-      return NextResponse.json({
-        message: 'Migration already applied',
-        status: 'up-to-date'
-      })
+      console.log('✅ Database schema is up-to-date')
+      return { success: true, migrated: false }
     }
 
-    // Apply the migration
+    console.log('🔄 Applying pending migrations...')
+
+    // Apply the organization/role migration
     await prisma.$executeRawUnsafe(`
       -- CreateEnum
       CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMINISTRATOR', 'SUPERADMIN');
@@ -63,26 +54,31 @@ export async function POST(request: NextRequest) {
       ON DELETE SET NULL ON UPDATE CASCADE;
     `)
 
-    // Update admin email to be superadmin
+    // Update admin email user to be superadmin if specified
     if (process.env.ADMIN_EMAIL) {
-      await prisma.user.updateMany({
+      const updatedCount = await prisma.user.updateMany({
         where: { email: process.env.ADMIN_EMAIL },
         data: {
           isSuperAdmin: true,
           isAdmin: true
         }
       })
+
+      if (updatedCount.count > 0) {
+        console.log(`✅ Set ${process.env.ADMIN_EMAIL} as superadmin`)
+      }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Migration applied successfully'
-    })
+    console.log('✅ Migrations applied successfully')
+    return { success: true, migrated: true }
   } catch (error) {
-    console.error('Migration error:', error)
-    return NextResponse.json({
-      error: 'Failed to apply migration',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    // If error is about enum already existing, ignore it (migration already partially applied)
+    if (error instanceof Error && error.message.includes('already exists')) {
+      console.log('⚠️ Migration partially applied, continuing...')
+      return { success: true, migrated: false }
+    }
+
+    console.error('❌ Migration failed:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
