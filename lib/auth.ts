@@ -58,22 +58,17 @@ export const authOptions: NextAuthOptions = {
       const isAllowed = ALLOWED_DOMAINS.includes(emailDomain) || user.email === ADMIN_EMAIL
 
       // Handle user setup on first login
-      if (isAllowed && user.id) {
+      if (isAllowed && user.id && user.email === ADMIN_EMAIL) {
         try {
-          const dbUser = await prisma.user.findUnique({
+          // Set superadmin for the ADMIN_EMAIL on every login (backward compatible)
+          await prisma.user.update({
             where: { id: user.id },
-            select: { id: true, isSuperAdmin: true }
+            data: { isAdmin: true }
+          }).catch(() => {
+            // Silently fail if field doesn't exist (local dev without migration)
           })
-
-          if (dbUser && user.email === ADMIN_EMAIL && !dbUser.isSuperAdmin) {
-            // Set superadmin for the ADMIN_EMAIL (using old schema for now)
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { isAdmin: true }
-            }).catch(() => {})
-          }
         } catch (error) {
-          console.error('Error updating user on signin:', error)
+          // Silently fail - schema may not have admin fields yet
         }
       }
 
