@@ -3,7 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 
-const ALLOWED_DOMAINS = ['prepard911.com', 'axon.com', 'nealsoni.com']
+const ALLOWED_DOMAINS = ['prepared911.com', 'axon.com', 'nealsoni.com']
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nealsoni00@gmail.com'
 
 // Organization domains that should auto-create organizations
@@ -53,6 +53,10 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (!user.email) return false
+
+      console.log('Sign in attempt:', user.email)
+      console.log('ADMIN_EMAIL:', ADMIN_EMAIL)
+      console.log('Is admin email:', user.email === ADMIN_EMAIL)
 
       const emailDomain = user.email.split('@')[1]
       const isAllowed = ALLOWED_DOMAINS.includes(emailDomain) || user.email === ADMIN_EMAIL

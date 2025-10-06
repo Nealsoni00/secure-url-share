@@ -21,7 +21,7 @@ function SignInContent() {
   const getErrorMessage = (error: string | null) => {
     switch(error) {
       case 'Callback':
-        return 'Authentication failed. Please make sure you are using an email from @prepard911.com, @axon.com, or @nealsoni.com'
+        return 'Authentication failed. Please make sure you are using an email from @prepared911.com, @axon.com, or @nealsoni.com'
       case 'OAuthCreateAccount':
         return 'Failed to create account. Please try again or contact support.'
       case 'AccessDenied':
@@ -63,7 +63,7 @@ function SignInContent() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Only users with @prepard911.com, @axon.com, @nealsoni.com emails, or pre-approved accounts can sign in
+            Only users with @prepared911.com, @axon.com, @nealsoni.com emails, or pre-approved accounts can sign in
           </p>
         </div>
 
