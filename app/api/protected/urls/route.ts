@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       const field = meta?.target instanceof Array ? meta.target[0] : null
       if (field === 'customSlug') {
         return NextResponse.json({
-          error: `The custom slug "${customSlug}" is already in use. Please choose a different one.`
+          error: 'This custom slug is already in use. Please choose a different one.'
         } satisfies ApiError, { status: 409 })
       }
     }
