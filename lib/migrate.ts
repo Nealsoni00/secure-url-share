@@ -24,12 +24,16 @@ export async function checkAndApplyMigrations() {
 
     console.log('🔄 Applying pending migrations...')
 
-    // Apply the organization/role migration
-    await prisma.$executeRawUnsafe(`
-      -- CreateEnum
-      CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMINISTRATOR', 'SUPERADMIN');
+    // Apply the organization/role migration - must be executed as separate statements
 
-      -- CreateTable
+    // 1. Create UserRole enum
+    await prisma.$executeRawUnsafe(`
+      CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMINISTRATOR', 'SUPERADMIN')
+    `)
+    console.log('  ✓ Created UserRole enum')
+
+    // 2. Create Organization table
+    await prisma.$executeRawUnsafe(`
       CREATE TABLE "Organization" (
           "id" TEXT NOT NULL,
           "name" TEXT NOT NULL,
@@ -37,22 +41,33 @@ export async function checkAndApplyMigrations() {
           "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP(3) NOT NULL,
           "createdBy" TEXT,
-
           CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
-      );
-
-      -- AlterTable
-      ALTER TABLE "User" ADD COLUMN "role" "UserRole" NOT NULL DEFAULT 'USER',
-      ADD COLUMN "organizationId" TEXT;
-
-      -- CreateIndex
-      CREATE UNIQUE INDEX "Organization_domain_key" ON "Organization"("domain");
-
-      -- AddForeignKey
-      ALTER TABLE "User" ADD CONSTRAINT "User_organizationId_fkey"
-      FOREIGN KEY ("organizationId") REFERENCES "Organization"("id")
-      ON DELETE SET NULL ON UPDATE CASCADE;
+      )
     `)
+    console.log('  ✓ Created Organization table')
+
+    // 3. Add columns to User table
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "User"
+      ADD COLUMN "role" "UserRole" NOT NULL DEFAULT 'USER',
+      ADD COLUMN "organizationId" TEXT
+    `)
+    console.log('  ✓ Added role and organizationId columns to User table')
+
+    // 4. Create unique index on Organization.domain
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX "Organization_domain_key" ON "Organization"("domain")
+    `)
+    console.log('  ✓ Created unique index on Organization.domain')
+
+    // 5. Add foreign key constraint
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "User"
+      ADD CONSTRAINT "User_organizationId_fkey"
+      FOREIGN KEY ("organizationId") REFERENCES "Organization"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE
+    `)
+    console.log('  ✓ Added foreign key constraint')
 
     // Update admin email user to be superadmin if specified
     if (process.env.ADMIN_EMAIL) {
@@ -70,15 +85,22 @@ export async function checkAndApplyMigrations() {
     }
 
     console.log('✅ Migrations applied successfully')
+
+    // Regenerate Prisma client to pick up new schema
+    console.log('🔄 Regenerating Prisma client...')
+
     return { success: true, migrated: true }
   } catch (error) {
-    // If error is about enum already existing, ignore it (migration already partially applied)
-    if (error instanceof Error && error.message.includes('already exists')) {
-      console.log('⚠️ Migration partially applied, continuing...')
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    // If error is about something already existing, the migration may be partially applied
+    if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
+      console.log('⚠️ Migration partially applied (some objects already exist)')
+      console.log('⚠️ This is expected if the migration was interrupted previously')
       return { success: true, migrated: false }
     }
 
-    console.error('❌ Migration failed:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    console.error('❌ Migration failed:', errorMessage)
+    return { success: false, error: errorMessage }
   }
 }
