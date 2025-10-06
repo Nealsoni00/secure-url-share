@@ -3,7 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 
-const ALLOWED_DOMAINS = ['prepared911.com', 'axon.com', 'nealsoni.com']
+const ALLOWED_DOMAINS = ['prepared911.com', 'axon.com', 'nealsoni.com', 'gmail.com']
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nealsoni00@gmail.com'
 
 // Organization domains that should auto-create organizations
