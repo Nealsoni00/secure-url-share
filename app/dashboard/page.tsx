@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import toast from 'react-hot-toast'
 import {
   Copy,
@@ -203,11 +204,15 @@ export default function Dashboard() {
                   className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   {session?.user?.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || 'User'}
-                      className="h-8 w-8 rounded-full border-2 border-indigo-200"
-                    />
+                    <div className="relative h-8 w-8 rounded-full border-2 border-indigo-200 overflow-hidden">
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name || 'User'}
+                        fill
+                        className="object-cover"
+                        sizes="32px"
+                      />
+                    </div>
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
                       <Users className="h-4 w-4 text-indigo-600" />
@@ -229,13 +234,17 @@ export default function Dashboard() {
                       <div className="px-4 py-3 border-b border-gray-200">
                         <div className="flex items-center space-x-3">
                           {session?.user?.image ? (
-                            <img
-                              src={session.user.image}
-                              alt={session.user.name || 'User'}
-                              className="h-12 w-12 rounded-full border-2 border-indigo-200"
-                            />
+                            <div className="relative h-12 w-12 rounded-full border-2 border-indigo-200 overflow-hidden flex-shrink-0">
+                              <Image
+                                src={session.user.image}
+                                alt={session.user.name || 'User'}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                              />
+                            </div>
                           ) : (
-                            <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
                               <Users className="h-6 w-6 text-indigo-600" />
                             </div>
                           )}
