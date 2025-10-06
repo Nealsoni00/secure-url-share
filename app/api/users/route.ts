@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import type { CreateUserRequest, ApiError } from '@/types/api'
 
 // GET users in organization (org admin or superadmin)
 export async function GET(request: NextRequest) {
@@ -81,10 +82,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, name, organizationId, isAdmin } = await request.json()
+    const body = await request.json() as CreateUserRequest
+    const { email, name, organizationId, isAdmin } = body
 
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+      return NextResponse.json({
+        error: 'Email is required'
+      } satisfies ApiError, { status: 400 })
     }
 
     // Validate permissions
@@ -92,7 +96,9 @@ export async function POST(request: NextRequest) {
     const isOrgAdmin = session.user.isAdmin && session.user.organizationId === organizationId
 
     if (!isSuperAdmin && !isOrgAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden'
+      } satisfies ApiError, { status: 403 })
     }
 
     // Check if user already exists
@@ -101,7 +107,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
-      return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 })
+      return NextResponse.json({
+        error: 'User with this email already exists'
+      } satisfies ApiError, { status: 409 })
     }
 
     // Create user
@@ -124,13 +132,17 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(user)
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating user:', error)
 
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 })
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json({
+        error: 'User with this email already exists'
+      } satisfies ApiError, { status: 409 })
     }
 
-    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to create user'
+    } satisfies ApiError, { status: 500 })
   }
 }

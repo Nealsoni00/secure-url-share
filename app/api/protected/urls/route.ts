@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { nanoid } from 'nanoid'
 import bcrypt from 'bcryptjs'
+import type { CreateProtectedUrlRequest, ApiError } from '@/types/api'
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -34,7 +35,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(urls)
   } catch (error) {
     console.error('Error fetching URLs:', error)
-    return NextResponse.json({ error: 'Failed to fetch URLs' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to fetch URLs'
+    } satisfies ApiError, { status: 500 })
   }
 }
 
@@ -45,7 +48,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { originalUrl, title, description, customSlug, displayMode, showUserInfo } = await request.json()
+    const body = await request.json() as CreateProtectedUrlRequest
+    const { originalUrl, title, description, customSlug, displayMode, showUserInfo } = body
 
     // Validate the original URL
     try {
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({
         error: 'Invalid URL format. Please provide a valid URL starting with http:// or https://'
-      }, { status: 400 })
+      } satisfies ApiError, { status: 400 })
     }
 
     const slug = customSlug || nanoid(10)
@@ -67,9 +71,9 @@ export async function POST(request: NextRequest) {
           title,
           description,
           customSlug: slug,
-          ...(displayMode && { displayMode }),
-          ...(showUserInfo !== undefined && { showUserInfo })
-        } as any
+          displayMode: displayMode || 'auto',
+          showUserInfo: showUserInfo ?? true
+        }
       })
 
       // Create a default name-based access link (passwordless, least intrusive)
@@ -92,19 +96,22 @@ export async function POST(request: NextRequest) {
         uniqueCode: result.accessLink.uniqueCode
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating protected URL:', error)
 
     // Handle Prisma unique constraint violations
-    if (error.code === 'P2002') {
-      const field = error.meta?.target?.[0]
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      const meta = 'meta' in error ? error.meta as Record<string, unknown> : null
+      const field = meta?.target instanceof Array ? meta.target[0] : null
       if (field === 'customSlug') {
         return NextResponse.json({
           error: `The custom slug "${customSlug}" is already in use. Please choose a different one.`
-        }, { status: 409 })
+        } satisfies ApiError, { status: 409 })
       }
     }
 
-    return NextResponse.json({ error: 'Failed to create protected URL' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to create protected URL'
+    } satisfies ApiError, { status: 500 })
   }
 }

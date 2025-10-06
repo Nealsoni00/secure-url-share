@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getBaseUrl } from '@/lib/url'
+import type { UpdateAccessLinkData, ApiError } from '@/types/api'
 
 export async function PATCH(
   request: NextRequest,
@@ -15,7 +16,7 @@ export async function PATCH(
 
   try {
     const { id, linkId } = await params
-    const body = await request.json()
+    const body = await request.json() as UpdateAccessLinkData
     const { isActive, recipientName, recipientEmail, recipientPhone, expiresAt, maxAccesses } = body
 
     // First verify the user owns the protected URL
@@ -27,17 +28,19 @@ export async function PATCH(
     })
 
     if (!protectedUrl) {
-      return NextResponse.json({ error: 'URL not found' }, { status: 404 })
+      return NextResponse.json({
+        error: 'URL not found'
+      } satisfies ApiError, { status: 404 })
     }
 
     // Build update data object
-    const updateData: any = {}
+    const updateData: UpdateAccessLinkData = {}
     if (isActive !== undefined) updateData.isActive = isActive
     if (recipientName !== undefined) updateData.recipientName = recipientName || null
     if (recipientEmail !== undefined) updateData.recipientEmail = recipientEmail || null
     if (recipientPhone !== undefined) updateData.recipientPhone = recipientPhone || null
     if (expiresAt !== undefined) updateData.expiresAt = expiresAt ? new Date(expiresAt) : null
-    if (maxAccesses !== undefined) updateData.maxAccesses = maxAccesses ? parseInt(maxAccesses) : null
+    if (maxAccesses !== undefined) updateData.maxAccesses = maxAccesses ? Number(maxAccesses) : null
 
     // Update the access link
     const updatedLink = await prisma.accessLink.update({
@@ -56,7 +59,9 @@ export async function PATCH(
     })
   } catch (error) {
     console.error('Error updating access link:', error)
-    return NextResponse.json({ error: 'Failed to update access link' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to update access link'
+    } satisfies ApiError, { status: 500 })
   }
 }
 
@@ -80,7 +85,9 @@ export async function DELETE(
     })
 
     if (!protectedUrl) {
-      return NextResponse.json({ error: 'URL not found' }, { status: 404 })
+      return NextResponse.json({
+        error: 'URL not found'
+      } satisfies ApiError, { status: 404 })
     }
 
     // Delete the access link
@@ -94,6 +101,8 @@ export async function DELETE(
     return NextResponse.json({ success: true, deleted: deletedLink.id })
   } catch (error) {
     console.error('Error deleting access link:', error)
-    return NextResponse.json({ error: 'Failed to delete access link' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to delete access link'
+    } satisfies ApiError, { status: 500 })
   }
 }

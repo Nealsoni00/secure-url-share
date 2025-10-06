@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import type { UpdateUserRequest, ApiError } from '@/types/api'
 
 // GET user by ID
 export async function GET(
@@ -41,7 +42,9 @@ export async function GET(
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({
+        error: 'User not found'
+      } satisfies ApiError, { status: 404 })
     }
 
     // Check permissions
@@ -50,13 +53,17 @@ export async function GET(
                    session.user.id === user.id
 
     if (!canView) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden'
+      } satisfies ApiError, { status: 403 })
     }
 
     return NextResponse.json(user)
   } catch (error) {
     console.error('Error fetching user:', error)
-    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to fetch user'
+    } satisfies ApiError, { status: 500 })
   }
 }
 
@@ -72,7 +79,8 @@ export async function PATCH(
 
   try {
     const { id } = await params
-    const { name, isAdmin, isSuperAdmin, organizationId } = await request.json()
+    const body = await request.json() as UpdateUserRequest
+    const { name, isAdmin, isSuperAdmin, organizationId } = body
 
     const targetUser = await prisma.user.findUnique({
       where: { id },
@@ -80,7 +88,9 @@ export async function PATCH(
     })
 
     if (!targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({
+        error: 'User not found'
+      } satisfies ApiError, { status: 404 })
     }
 
     // Permission checks
@@ -89,11 +99,13 @@ export async function PATCH(
     const canUpdate = session.user.isSuperAdmin || isOrgAdmin || isSelfUpdate
 
     if (!canUpdate) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden'
+      } satisfies ApiError, { status: 403 })
     }
 
     // Build update data
-    const updateData: any = {}
+    const updateData: Partial<UpdateUserRequest> = {}
 
     // Anyone can update their own name
     if (name !== undefined) updateData.name = name
@@ -132,7 +144,9 @@ export async function PATCH(
     return NextResponse.json(updatedUser)
   } catch (error) {
     console.error('Error updating user:', error)
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to update user'
+    } satisfies ApiError, { status: 500 })
   }
 }
 
@@ -151,7 +165,9 @@ export async function DELETE(
 
     // Prevent self-deletion
     if (session.user.id === id) {
-      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
+      return NextResponse.json({
+        error: 'Cannot delete your own account'
+      } satisfies ApiError, { status: 400 })
     }
 
     const targetUser = await prisma.user.findUnique({
@@ -160,13 +176,17 @@ export async function DELETE(
     })
 
     if (!targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({
+        error: 'User not found'
+      } satisfies ApiError, { status: 404 })
     }
 
     // Permission check
     const isOrgAdmin = session.user.isAdmin && session.user.organizationId === targetUser.organizationId
     if (!session.user.isSuperAdmin && !isOrgAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden'
+      } satisfies ApiError, { status: 403 })
     }
 
     await prisma.user.delete({
@@ -176,6 +196,8 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting user:', error)
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to delete user'
+    } satisfies ApiError, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import type { UpdateOrganizationRequest, ApiError } from '@/types/api'
 
 // GET organization by ID (org admin or superadmin)
 export async function GET(
@@ -62,17 +63,17 @@ export async function PATCH(
 
   try {
     const { id } = await params
-    const { name, domain } = await request.json()
+    const body = await request.json() as UpdateOrganizationRequest
 
     // Check access rights
     const isOrgAdmin = session.user.isAdmin && session.user.organizationId === id
     if (!session.user.isSuperAdmin && !isOrgAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' } satisfies ApiError, { status: 403 })
     }
 
-    const updateData: any = {}
-    if (name !== undefined) updateData.name = name
-    if (domain !== undefined) updateData.domain = domain || null
+    const updateData: Partial<UpdateOrganizationRequest> = {}
+    if (body.name !== undefined) updateData.name = body.name
+    if (body.domain !== undefined) updateData.domain = body.domain || null
 
     const organization = await prisma.organization.update({
       where: { id },
@@ -80,14 +81,18 @@ export async function PATCH(
     })
 
     return NextResponse.json(organization)
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating organization:', error)
 
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: 'An organization with this domain already exists' }, { status: 409 })
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json({
+        error: 'An organization with this domain already exists'
+      } satisfies ApiError, { status: 409 })
     }
 
-    return NextResponse.json({ error: 'Failed to update organization' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to update organization'
+    } satisfies ApiError, { status: 500 })
   }
 }
 

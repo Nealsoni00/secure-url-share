@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import type { CreateOrganizationRequest, ApiError } from '@/types/api'
 
 // GET all organizations (superadmin only)
 export async function GET(request: NextRequest) {
@@ -33,7 +34,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(organizations)
   } catch (error) {
     console.error('Error fetching organizations:', error)
-    return NextResponse.json({ error: 'Failed to fetch organizations' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to fetch organizations'
+    } satisfies ApiError, { status: 500 })
   }
 }
 
@@ -45,10 +48,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { name, domain } = await request.json()
+    const body = await request.json() as CreateOrganizationRequest
+    const { name, domain } = body
 
     if (!name) {
-      return NextResponse.json({ error: 'Organization name is required' }, { status: 400 })
+      return NextResponse.json({
+        error: 'Organization name is required'
+      } satisfies ApiError, { status: 400 })
     }
 
     const organization = await prisma.organization.create({
@@ -60,13 +66,17 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(organization)
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating organization:', error)
 
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: 'An organization with this domain already exists' }, { status: 409 })
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json({
+        error: 'An organization with this domain already exists'
+      } satisfies ApiError, { status: 409 })
     }
 
-    return NextResponse.json({ error: 'Failed to create organization' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to create organization'
+    } satisfies ApiError, { status: 500 })
   }
 }

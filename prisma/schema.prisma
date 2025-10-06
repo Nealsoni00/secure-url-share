@@ -7,19 +7,42 @@ datasource db {
   url      = env("URL_SHARING_POSTGRES_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  image         String?
-  emailVerified DateTime?
-  isAdmin       Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+enum UserRole {
+  USER          // Can view organization members
+  ADMINISTRATOR // Can manage users in organization
+  SUPERADMIN    // Can manage all organizations
+}
 
-  protectedUrls ProtectedUrl[]
-  accounts      Account[]
-  sessions      Session[]
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  domain      String?  @unique // Email domain (e.g., "axon.com", "prepared911.com")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  createdBy   String?  // User ID of the first admin
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  image           String?
+  emailVerified   DateTime?
+  role            UserRole  @default(USER)
+  organizationId  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Kept for backward compatibility during migration
+  isAdmin         Boolean   @default(false)
+  isSuperAdmin    Boolean   @default(false)
+
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  protectedUrls   ProtectedUrl[]
+  accounts        Account[]
+  sessions        Session[]
 }
 
 model Account {
