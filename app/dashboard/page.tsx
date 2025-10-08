@@ -1,34 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import toast from 'react-hot-toast'
 import {
   Copy,
-  ExternalLink,
   Shield,
   Users,
   Clock,
   Plus,
-  LogOut,
-  Settings,
-  ChevronRight,
   ChevronDown,
   Link2,
   Eye,
-  EyeOff,
   Check,
   Monitor,
-  ArrowRight,
-  Building2,
-  Crown,
-  Menu,
   Edit
 } from 'lucide-react'
 import { detectUrlType } from '@/lib/url-type'
+import Header from '@/components/Header'
 
 interface ProtectedUrl {
   id: string
@@ -57,7 +48,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [showMenu, setShowMenu] = useState(false)
   const [expandedUrls, setExpandedUrls] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState({
     originalUrl: '',
